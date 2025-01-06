@@ -1,45 +1,88 @@
 import { Link } from 'react-router-dom'
+import { useForm } from 'react-hook-form'
+import { useMutation } from '@tanstack/react-query'
+import { yupResolver } from '@hookform/resolvers/yup'
+import Input from '../../components/Input'
+import { schema, Schema } from '../../utils/rules'
+import { registerAccount } from '../../apis/auth.api'
+import { omit } from 'lodash'
+import { isAxiosUnprocessableEntityError } from '../../utils/utils'
+import { ResponseApi } from '../../types/utils.type'
+
+type FormData = Schema
 
 export default function Register() {
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors }
+  } = useForm<FormData>({
+    resolver: yupResolver(schema)
+  })
+
+  const registerAccountMutation = useMutation({
+    mutationFn: (body: Omit<FormData, 'confirm_passowrd'>) => registerAccount(body)
+  })
+
+  const onSubmit = handleSubmit((data) => {
+    const body = omit(data, ['confirn_password'])
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    registerAccountMutation.mutate(body as any, {
+      onSuccess: (data) => console.log(data),
+      onError: (error) => {
+        if (isAxiosUnprocessableEntityError<ResponseApi<Omit<FormData, 'confirm_password'>>>(error)) {
+          const formError = error.response?.data.data
+          if (formError) {
+            Object.keys(formError).forEach((key) => {
+              setError(key as keyof Omit<FormData, 'confirm_password'>, {
+                message: formError[key as keyof Omit<FormData, 'confirm_password'>],
+                type: 'Server'
+              })
+            })
+          }
+        }
+      }
+    })
+  })
+
   return (
     <div className='bg-primaryColor'>
-      <div className='max-w-7xl mx-auto px-4'>
+      <div className='container'>
         <div className='grid grid-cols-1 py-12 lg:grid-cols-5 lg:py-32 lg:pr-10'>
           <div className='lg:col-span-2 lg:col-start-4'>
-            <form className='p-10 rounded bg-white shadow-sm'>
+            <form className='p-10 rounded bg-white shadow-sm' onSubmit={onSubmit} noValidate>
               <div className='text-2xl'>Đăng ký</div>
-              <div className='mt-8'>
-                <input
-                  type='email'
-                  name='email'
-                  id=''
-                  className='p-3 w-full outline-none border border-gray-300 focus:border-gray-500 focus:shadow-sm focus:bg-blue-100 rounded-sm'
-                  placeholder='Email'
-                />
-                <div className='mt-1 text-red-600 min-h-[1rem] text-sm'></div>
-              </div>
-              <div className='mt-3'>
-                <input
-                  type='password'
-                  name='password'
-                  id=''
-                  className='p-3 w-full outline-none border border-gray-300 focus:border-gray-500 focus:shadow-sm focus:bg-blue-100 rounded-sm'
-                  placeholder='Mật khẩu'
-                />
-                <div className='mt-1 text-red-600 min-h-[1rem] text-sm'></div>
-              </div>
-              <div className='mt-3'>
-                <input
-                  type='password'
-                  name='confirmPassword'
-                  id=''
-                  className='p-3 w-full outline-none border border-gray-300 focus:border-gray-500 focus:shadow-sm focus:bg-blue-100 rounded-sm'
-                  placeholder='Xác nhận mật khẩu'
-                />
-                <div className='mt-1 text-red-600 min-h-[1rem] text-sm'></div>
-              </div>
-              <div className='mt-3'>
-                <button className='w-full text-center py-4 px-2 uppercase bg-red-500 text-white text-sm hover:bg-red-600 rounded-sm'>
+              <Input
+                type='email'
+                className='mt-8'
+                name='email'
+                placeholder='Email'
+                register={register}
+                errorMessage={errors.email?.message}
+              />
+              <Input
+                type='password'
+                className='mt-2'
+                name='password'
+                placeholder='Mật khẩu'
+                register={register}
+                errorMessage={errors.password?.message}
+              />
+              <Input
+                type='password'
+                className='mt-2'
+                name='confirm_password'
+                placeholder='Xác nhận mật khẩu'
+                register={register}
+                errorMessage={errors.confirm_password?.message}
+              />
+
+              <div className='mt-2'>
+                <button
+                  type='submit'
+                  className='w-full text-center py-4 px-2 uppercase bg-red-500 text-white text-sm hover:bg-red-600 rounded-sm'
+                >
                   Đăng ký
                 </button>
               </div>
