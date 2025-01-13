@@ -1,17 +1,22 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { useForm } from 'react-hook-form'
 import { useMutation } from '@tanstack/react-query'
 import { Schema, schema } from '../../utils/rules'
-import { loginAccount } from '../../apis/auth.api'
+import { login } from '../../apis/auth.api'
 import { isAxiosUnprocessableEntityError } from '../../utils/utils'
-import { ResponseApi } from '../../types/utils.type'
+import { ErrorResponse } from '../../types/utils.type'
 import Input from '../../components/Input'
+import { useContext } from 'react'
+import { AppContext } from '../../contexts/app.context'
+import Button from '../../components/Button'
+import path from '../../constants/path'
 
 type FormData = Omit<Schema, 'confirm_password'>
 const loginSchema = schema.omit(['confirm_password'])
 
 export default function Login() {
+  const { setIsAuthenticated, setProfile } = useContext(AppContext)
   const {
     register,
     handleSubmit,
@@ -21,16 +26,24 @@ export default function Login() {
     resolver: yupResolver(loginSchema)
   })
 
-  const loginAccountMutation = useMutation({
-    mutationFn: (body: Omit<FormData, 'confirm_passowrd'>) => loginAccount(body)
+  const navigate = useNavigate()
+
+  const loginMutation = useMutation({
+    mutationFn: (body: Omit<FormData, 'confirm_passowrd'>) => login(body)
   })
 
   const onSubmit = handleSubmit((data) => {
     console.log(data)
-    loginAccountMutation.mutate(data, {
-      onSuccess: (data) => console.log(data),
+    loginMutation.mutate(data, {
+      onSuccess: (data) => {
+        console.log(data)
+
+        setIsAuthenticated(true)
+        setProfile(data.data.data.user)
+        navigate('/')
+      },
       onError: (error) => {
-        if (isAxiosUnprocessableEntityError<ResponseApi<FormData>>(error)) {
+        if (isAxiosUnprocessableEntityError<ErrorResponse<FormData>>(error)) {
           const formError = error.response?.data.data
           if (formError) {
             Object.keys(formError).forEach((key) => {
@@ -69,16 +82,18 @@ export default function Login() {
                 errorMessage={errors.password?.message}
               />
               <div className='mt-2'>
-                <button
+                <Button
                   type='submit'
-                  className='w-full text-center py-4 px-2 uppercase bg-red-500 text-white text-sm hover:bg-red-600 rounded-sm'
+                  className='w-full text-center py-4 px-2 uppercase bg-red-500 text-white text-sm hover:bg-red-600 rounded-sm flex justify-center items-centerg gap-2'
+                  isLoading={loginMutation.isPending}
+                  disabled={loginMutation.isPending}
                 >
                   Đăng nhập
-                </button>
+                </Button>
               </div>
               <div className='flex items-center justify-center mt-8'>
                 <span className='text-gray-400'>Bạn chưa có tài khoản?</span>
-                <Link to='/register' className='text-primaryColor ml-1'>
+                <Link to={path.register} className='text-primaryColor ml-1'>
                   Đăng ký
                 </Link>
               </div>

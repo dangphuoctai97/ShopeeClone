@@ -1,17 +1,21 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { useMutation } from '@tanstack/react-query'
 import { yupResolver } from '@hookform/resolvers/yup'
+import { toast } from 'react-toastify'
 import Input from '../../components/Input'
 import { schema, Schema } from '../../utils/rules'
 import { registerAccount } from '../../apis/auth.api'
 import { omit } from 'lodash'
 import { isAxiosUnprocessableEntityError } from '../../utils/utils'
-import { ResponseApi } from '../../types/utils.type'
+import { ErrorResponse } from '../../types/utils.type'
+import Button from '../../components/Button'
+import path from '../../constants/path'
 
 type FormData = Schema
 
 export default function Register() {
+  const navigate = useNavigate()
   const {
     register,
     handleSubmit,
@@ -29,9 +33,12 @@ export default function Register() {
     const body = omit(data, ['confirn_password'])
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     registerAccountMutation.mutate(body as any, {
-      onSuccess: (data) => console.log(data),
+      onSuccess: (data) => {
+        navigate(path.login)
+        toast.success(data.data.message)
+      },
       onError: (error) => {
-        if (isAxiosUnprocessableEntityError<ResponseApi<Omit<FormData, 'confirm_password'>>>(error)) {
+        if (isAxiosUnprocessableEntityError<ErrorResponse<Omit<FormData, 'confirm_password'>>>(error)) {
           const formError = error.response?.data.data
           if (formError) {
             Object.keys(formError).forEach((key) => {
@@ -79,12 +86,14 @@ export default function Register() {
               />
 
               <div className='mt-2'>
-                <button
+                <Button
                   type='submit'
-                  className='w-full text-center py-4 px-2 uppercase bg-red-500 text-white text-sm hover:bg-red-600 rounded-sm'
+                  className='w-full text-center py-4 px-2 uppercase bg-red-500 text-white text-sm hover:bg-red-600 rounded-sm flex justify-center items-center gap-2'
+                  isLoading={registerAccountMutation.isPending}
+                  disabled={registerAccountMutation.isPending}
                 >
                   Đăng ký
-                </button>
+                </Button>
               </div>
               <div className='flex items-center justify-center mt-8'>
                 <span className='text-gray-400'>Bạn đã có tài khoản?</span>

@@ -9,7 +9,8 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        primaryColor: '#ee4d2d'
+        primaryColor: '#ee4d2d',
+        headerBg: 'linear-gradient(-180deg, #f53d2d, #f63)'
       }
     }
   },
