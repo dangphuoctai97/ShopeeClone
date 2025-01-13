@@ -34,13 +34,12 @@ class Http {
     this.instance.interceptors.response.use(
       (response) => {
         const { url } = response.config
-        console.log(url, path.login)
-        if (url === path.login || url === path.register) {
+        if ([path.login, path.register].some((path) => path.includes(String(url)))) {
           const data = response.data as AuthResponse
           this.accessToken = data.data.access_token
           setAccessTokenToLS(this.accessToken)
           setProfileToLS(data.data.user)
-        } else if (url === path.logout) {
+        } else if ([path.logout].some((path) => path.includes(String(url)))) {
           this.accessToken = ''
           clearLS()
         }
