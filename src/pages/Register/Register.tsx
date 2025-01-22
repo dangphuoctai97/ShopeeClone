@@ -5,14 +5,15 @@ import { yupResolver } from '@hookform/resolvers/yup'
 import { toast } from 'react-toastify'
 import Input from '../../components/Input'
 import { schema, Schema } from '../../utils/rules'
-import { registerAccount } from '../../apis/auth.api'
+import authApi from '../../apis/auth.api'
 import { omit } from 'lodash'
 import { isAxiosUnprocessableEntityError } from '../../utils/utils'
 import { ErrorResponse } from '../../types/utils.type'
 import Button from '../../components/Button'
 import path from '../../constants/path'
 
-type FormData = Schema
+type FormData = Pick<Schema, 'email' | 'password' | 'confirm_password'>
+const registerSchema = schema.pick(['email', 'password', 'confirm_password'])
 
 export default function Register() {
   const navigate = useNavigate()
@@ -22,15 +23,15 @@ export default function Register() {
     setError,
     formState: { errors }
   } = useForm<FormData>({
-    resolver: yupResolver(schema)
+    resolver: yupResolver(registerSchema)
   })
 
   const registerAccountMutation = useMutation({
-    mutationFn: (body: Omit<FormData, 'confirm_passowrd'>) => registerAccount(body)
+    mutationFn: (body: Omit<FormData, 'confirm_password'>) => authApi.registerAccount(body)
   })
 
   const onSubmit = handleSubmit((data) => {
-    const body = omit(data, ['confirn_password'])
+    const body = omit(data, ['confirm_password'])
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     registerAccountMutation.mutate(body as any, {
       onSuccess: (data) => {

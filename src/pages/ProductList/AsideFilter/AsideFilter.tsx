@@ -1,13 +1,71 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
+import { createSearchParams, Link, useNavigate } from 'react-router-dom'
 import path from '../../../constants/path'
-import Input from '../../../components/Input'
 import Button from '../../../components/Button'
+import { queryConfig } from '../ProductList'
+import { Category } from '../../../types/category.type'
+import classNames from 'classnames'
+import InputNumber from '../../../components/InputNumber'
+import { useForm, Controller } from 'react-hook-form'
+import { schema, Schema } from '../../../utils/rules'
+import { yupResolver } from '@hookform/resolvers/yup'
+import { omit } from 'lodash'
+import { ObjectSchema } from 'yup'
+import { NoUndefinedField } from '../../../types/utils.type'
+import RatingStars from '../../../components/RatingStars'
 
-export default function AsideFilter() {
+interface Props {
+  queryConfig: queryConfig
+  categories: Category[]
+}
+
+type FormData = NoUndefinedField<Pick<Schema, 'price_max' | 'price_min'>>
+
+const priceSchema = schema.pick(['price_max', 'price_min'])
+
+export default function AsideFilter({ queryConfig, categories }: Props) {
+  const { category } = queryConfig
+  const navigate = useNavigate()
+  const {
+    control,
+    handleSubmit,
+    trigger,
+    formState: { errors }
+  } = useForm<FormData>({
+    defaultValues: {
+      price_min: '',
+      price_max: ''
+    },
+    shouldFocusError: false,
+    resolver: yupResolver<FormData>(priceSchema as ObjectSchema<FormData>)
+  })
+
+  const onSubmit = handleSubmit((data) => {
+    navigate({
+      pathname: path.home,
+      search: createSearchParams({
+        ...queryConfig,
+        price_min: data.price_min,
+        price_max: data.price_max
+      }).toString()
+    })
+  })
+  console.log(errors)
+
+  const handleRemoveAll = () => {
+    navigate({
+      pathname: path.home,
+      search: createSearchParams(omit(queryConfig, ['category', 'price_min', 'price_max', 'rating_filter'])).toString()
+    })
+  }
+
   return (
     <div className='py-4'>
-      <Link to={path.home} className='flex items-center font-bold'>
+      <Link
+        to={path.home}
+        className={classNames('flex items-center font-bold', {
+          'text-primaryColor': !category
+        })}
+      >
         <svg
           xmlns='http://www.w3.org/2000/svg'
           fill='none'
@@ -26,49 +84,32 @@ export default function AsideFilter() {
       </Link>
       <div className='bg-gray-300 h-[1px] my-4' />
       <ul>
-        <li className='py-2 pl-2'>
-          <Link to={path.home} className='relative px-2 text-primaryColor font-bold'>
-            <svg viewBox='0 0 4 7' className='fill-primaryColor size-2 absolute top-1 left-[-10px]'>
-              <polygon points='4 3.5 0 0 0 7' />
-            </svg>
-            Thời trang nam
-          </Link>
-        </li>
-        <li className='py-2 pl-2'>
-          <Link to={path.home} className='relative px-2'>
-            Áo khoác
-          </Link>
-        </li>
-        <li className='py-2 pl-2'>
-          <Link to={path.home} className='relative px-2'>
-            Quần Jeans
-          </Link>
-        </li>
-        <li className='py-2 pl-2'>
-          <Link to={path.home} className='relative px-2'>
-            Điện thoại
-          </Link>
-        </li>
-        <li className='py-2 pl-2'>
-          <Link to={path.home} className='relative px-2'>
-            Áo sơ mi
-          </Link>
-        </li>
-        <li className='py-2 pl-2'>
-          <Link to={path.home} className='relative px-2'>
-            ốp lưng Iphone
-          </Link>
-        </li>
-        <li className='py-2 pl-2'>
-          <Link to={path.home} className='relative px-2'>
-            Giày thể thao
-          </Link>
-        </li>
-        <li className='py-2 pl-2'>
-          <Link to={path.home} className='relative px-2'>
-            Quần thun baggy
-          </Link>
-        </li>
+        {categories.map((categoryItem) => {
+          const isActive = category === categoryItem._id
+          return (
+            <li className='py-2 pl-2' key={categoryItem._id}>
+              <Link
+                to={{
+                  pathname: path.home,
+                  search: createSearchParams({
+                    ...queryConfig,
+                    category: categoryItem._id
+                  }).toString()
+                }}
+                className={classNames('relative px-2 ', {
+                  'text-primaryColor font-bold': isActive
+                })}
+              >
+                {isActive && (
+                  <svg viewBox='0 0 4 7' className='fill-primaryColor size-2 absolute top-1 left-[-10px]'>
+                    <polygon points='4 3.5 0 0 0 7' />
+                  </svg>
+                )}
+                {categoryItem.name}
+              </Link>
+            </li>
+          )
+        })}
       </ul>
       <Link to={path.home} className='flex items-center font-bold mt-4 uppercase'>
         <svg
@@ -90,24 +131,52 @@ export default function AsideFilter() {
       <div className='bg-gray-300 h-[1px] my-4' />
       <div className='my-5'>
         <div>Khoảng giá</div>
-        <form action='' className='mt-2'>
+        <form action='' className='mt-2' onSubmit={onSubmit}>
           <div className='flex items-start'>
-            <Input
-              type='text'
-              className='grow'
-              name='from'
-              placeholder='₫ Từ'
-              classNameInput='p-1 w-full outline-none border border-gray-300 focus:border-gray-500 focus:shadow-sm focus:bg-blue-100 rounded-sm'
+            <Controller
+              control={control}
+              name='price_min'
+              render={({ field }) => {
+                return (
+                  <InputNumber
+                    type='text'
+                    className='grow'
+                    classNameError='hidden'
+                    placeholder='₫ Từ'
+                    classNameInput='p-1 w-full outline-none border border-gray-300 focus:border-gray-500 focus:shadow-sm focus:bg-blue-100 rounded-sm'
+                    {...field}
+                    onChange={(e) => {
+                      field.onChange(e)
+                      trigger('price_max')
+                    }}
+                  />
+                )
+              }}
             />
+
             <div className='mx-2 mt-2 shrink-0'>-</div>
-            <Input
-              type='text'
-              className='grow'
-              name='from'
-              placeholder='₫ Đến'
-              classNameInput='p-1 w-full outline-none border border-gray-300 focus:border-gray-500 focus:shadow-sm focus:bg-blue-100 rounded-sm'
+            <Controller
+              control={control}
+              name='price_max'
+              render={({ field }) => {
+                return (
+                  <InputNumber
+                    type='text'
+                    className='grow'
+                    classNameError='hidden'
+                    placeholder='₫ Đến'
+                    classNameInput='p-1 w-full outline-none border border-gray-300 focus:border-gray-500 focus:shadow-sm focus:bg-blue-100 rounded-sm'
+                    {...field}
+                    onChange={(e) => {
+                      field.onChange(e)
+                      trigger('price_min')
+                    }}
+                  />
+                )
+              }}
             />
           </div>
+          <div className='my-2 min-h-[1.25rem] text-center text-red-600 text-sm'>{errors.price_min?.message}</div>
           <Button
             type='submit'
             className='w-full text-center p-2 uppercase bg-primaryColor text-white text-sm hover:bg-primaryColor/80 rounded-sm flex justify-center items-center gap-2'
@@ -119,59 +188,11 @@ export default function AsideFilter() {
       <div className='bg-gray-300 h-[1px] my-4' />
       <div className='my-5'>
         <div>Đánh giá</div>
-        <ul className='my-3'>
-          <li className='py-1 pl-2'>
-            <Link to='' className='flex items-center text-sm'>
-              {Array(5)
-                .fill(0)
-                .map((_, index) => (
-                  <svg
-                    key={index}
-                    xmlns='http://www.w3.org/2000/svg'
-                    fill='none'
-                    viewBox='0 0 24 24'
-                    strokeWidth={1.5}
-                    stroke='fill-yellow-400'
-                    className='size-4 mr-1 fill-yellow-400'
-                  >
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      d='M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z'
-                    />
-                  </svg>
-                ))}
-              <span>Trở lên</span>
-            </Link>
-          </li>
-          <li className='py-1 pl-2'>
-            <Link to='' className='flex items-center text-sm'>
-              {Array(5)
-                .fill(0)
-                .map((_, index) => (
-                  <svg
-                    key={index}
-                    xmlns='http://www.w3.org/2000/svg'
-                    fill='none'
-                    viewBox='0 0 24 24'
-                    strokeWidth={1.5}
-                    stroke='currentColor'
-                    className='size-4 mr-1'
-                  >
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      d='M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z'
-                    />
-                  </svg>
-                ))}
-              <span>Trở lên</span>
-            </Link>
-          </li>
-        </ul>
+        <RatingStars queryConfig={queryConfig} />
       </div>
       <div className='bg-gray-300 h-[1px] my-4' />
       <Button
+        onClick={handleRemoveAll}
         type='submit'
         className='w-full text-center p-2 uppercase bg-primaryColor text-white text-sm hover:bg-primaryColor/80 rounded-sm flex justify-center items-center gap-2'
       >
