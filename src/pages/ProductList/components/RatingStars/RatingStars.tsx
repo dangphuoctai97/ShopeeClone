@@ -1,7 +1,6 @@
 import { createSearchParams, useNavigate } from 'react-router-dom'
-import { queryConfig } from '../../pages/ProductList/ProductList'
-import path from '../../constants/path'
-import { omit } from 'lodash'
+import { queryConfig } from '../../ProductList'
+import path from '../../../../constants/path'
 
 interface Props {
   queryConfig: queryConfig
@@ -16,13 +15,6 @@ export default function RatingStars({ queryConfig }: Props) {
         ...queryConfig,
         rating_filter: String(indexStar)
       }).toString()
-    })
-  }
-
-  const handleRemoveAll = () => {
-    navigate({
-      pathname: path.home,
-      search: createSearchParams(omit(queryConfig, ['category', 'price_min', 'price_max', 'rating_filter'])).toString()
     })
   }
 
