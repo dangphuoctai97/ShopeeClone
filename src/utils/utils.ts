@@ -19,3 +19,21 @@ export function formatNumberToSocialStyle(value: number) {
     .replace('.', ',')
     .toLowerCase()
 }
+
+export function discountPercent(priceBeforeDiscount: number, price: number) {
+  return Math.round(((priceBeforeDiscount - price) / priceBeforeDiscount) * 100) + '%'
+}
+
+export const removeSpecialCharacter = (str: string) => {
+  // eslint-disable-next-line no-useless-escape
+  return str.replace(/!|@|%|\^|\*|\(|\)|\+|\=|\<|\>|\?|\/|,|\.|\:|\;|\'|\"|\&|\#|\[|\]|~|\$|_|`|-|{|}|\||\\/g, '')
+}
+
+export const generateNameId = ({ id, name }: { id: string; name: string }) => {
+  return removeSpecialCharacter(name).replace(/\s/g, '-') + `-i-${id}`
+}
+
+export const getIdFromNameId = (nameId: string) => {
+  const arr = nameId.split('-i-')
+  return arr[arr.length - 1]
+}

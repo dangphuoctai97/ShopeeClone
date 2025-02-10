@@ -1,12 +1,33 @@
-import { Link } from 'react-router-dom'
+import { createSearchParams, Link, useNavigate } from 'react-router-dom'
 import Popover from '../Popover'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import authApi from '../../apis/auth.api'
 import { useContext } from 'react'
 import { AppContext } from '../../contexts/app.context'
 import path from '../../constants/path'
+import useQueryConfig from 'src/hooks/useQueryConfig'
+import { useForm } from 'react-hook-form'
+import { schema, Schema } from 'src/utils/rules'
+import { yupResolver } from '@hookform/resolvers/yup'
+import { omit } from 'lodash'
+import { purchasesStatus } from 'src/constants/purchase'
+import purchasesApi from 'src/apis/purchases.api'
+import noProduct from 'src/assets/images/no-product.png'
+import { formatCurency } from 'src/utils/utils'
 
+type FormData = Pick<Schema, 'name'>
+
+const nameSchema = schema.pick(['name'])
+const MAX_PURCHASES = 5
 export default function Header() {
+  const queryConfig = useQueryConfig()
+  const navigate = useNavigate()
+  const { register, handleSubmit } = useForm<FormData>({
+    defaultValues: {
+      name: ''
+    },
+    resolver: yupResolver(nameSchema)
+  })
   const { isAuthenticated, setIsAuthenticated, profile } = useContext(AppContext)
   const logoutMutation = useMutation({
     mutationFn: authApi.logout,
@@ -15,9 +36,35 @@ export default function Header() {
     }
   })
 
+  const onSubmitSearch = handleSubmit((data) => {
+    const config = queryConfig.order
+      ? omit(
+          {
+            ...queryConfig,
+            name: data.name
+          },
+          ['order', 'sort_by']
+        )
+      : omit({
+          ...queryConfig,
+          name: data.name
+        })
+    navigate({
+      pathname: path.home,
+      search: createSearchParams(config).toString()
+    })
+  })
+
   const handleLogout = () => {
     logoutMutation.mutate()
   }
+
+  const { data: purchasesInCartData } = useQuery({
+    queryKey: ['purchases', { status: purchasesStatus.inCart }],
+    queryFn: () => purchasesApi.getPurchases({ status: purchasesStatus.inCart })
+  })
+
+  const purchasesInCart = purchasesInCartData?.data.data
   return (
     <div className='bg-[linear-gradient(-180deg,#f53d2d,#f63)] py-2'>
       <div className='container'>
@@ -119,11 +166,11 @@ export default function Header() {
               </g>
             </svg>
           </Link>
-          <form className='col-span-9'>
+          <form className='col-span-9' onSubmit={onSubmitSearch}>
             <div className='bg-white rounded-sm p-1 flex'>
               <input
                 type='text'
-                name='search'
+                {...register('name')}
                 id=''
                 placeholder='Siêu hội Freeship'
                 className='text-black px-2 py-2 flex-grow border-none outline-none bg-transparent'
@@ -150,110 +197,48 @@ export default function Header() {
             <Popover
               renderPopover={
                 <div className='bg-white relative shadow-md rounded-sm border border-gray-200 max-w-[400px] text-sm'>
-                  <div className='p-2'>
-                    <div className='text-gray-400 capitalize'>Sản phẩm mới thêm</div>
-                    <div className='mt-5'>
-                      <div className='mt-2 hover:bg-slate-100 py-2 flex'>
-                        <div className='flex-shrink-0 '>
-                          <img
-                            src='https://mighty.tools/mockmind-api/content/cartoon/31.jpg'
-                            alt='product'
-                            className='w-10 h-10 object-cover'
-                          />
-                        </div>
-                        <div className='flex-grow ml-2 overflow-hidden'>
-                          <div className='truncate'>
-                            Quần Short Nam HAFOS BASIC nỉ chân cua cao cấp, quần thun nam, Quần đùi nam trẻ trung,Quần
-                            lửng nam chuẩn form
+                  {purchasesInCart ? (
+                    <div className='p-2'>
+                      <div className='text-gray-400 capitalize'>Sản phẩm mới thêm</div>
+                      <div className='mt-5'>
+                        {purchasesInCart.slice(0, MAX_PURCHASES).map((purchase) => (
+                          <div className='mt-2 hover:bg-slate-100 py-2 flex' key={purchase._id}>
+                            <div className='flex-shrink-0 '>
+                              <img
+                                src={purchase.product.image}
+                                alt={purchase.product.name}
+                                className='w-10 h-10 object-cover'
+                              />
+                            </div>
+                            <div className='flex-grow ml-2 overflow-hidden'>
+                              <div className='truncate'>{purchase.product.name}</div>
+                            </div>
+                            <div className='ml-2 flex-shrink-0'>
+                              <span className='text-primaryColor'>₫{formatCurency(purchase.price)}</span>
+                            </div>
                           </div>
-                        </div>
-                        <div className='ml-2 flex-shrink-0'>
-                          <span className='text-primaryColor'>₫200.000</span>
-                        </div>
+                        ))}
                       </div>
-                      <div className='mt-2 hover:bg-slate-100 py-2 flex'>
-                        <div className='flex-shrink-0 '>
-                          <img
-                            src='https://mighty.tools/mockmind-api/content/cartoon/31.jpg'
-                            alt='product'
-                            className='w-10 h-10 object-cover'
-                          />
-                        </div>
-                        <div className='flex-grow ml-2 overflow-hidden'>
-                          <div className='truncate'>
-                            Quần Short Nam HAFOS BASIC nỉ chân cua cao cấp, quần thun nam, Quần đùi nam trẻ trung,Quần
-                            lửng nam chuẩn form
-                          </div>
-                        </div>
-                        <div className='ml-2 flex-shrink-0'>
-                          <span className='text-primaryColor'>₫200.000</span>
-                        </div>
-                      </div>
-                      <div className='mt-2 hover:bg-slate-100 py-2 flex'>
-                        <div className='flex-shrink-0 '>
-                          <img
-                            src='https://mighty.tools/mockmind-api/content/cartoon/31.jpg'
-                            alt='product'
-                            className='w-10 h-10 object-cover'
-                          />
-                        </div>
-                        <div className='flex-grow ml-2 overflow-hidden'>
-                          <div className='truncate'>
-                            Quần Short Nam HAFOS BASIC nỉ chân cua cao cấp, quần thun nam, Quần đùi nam trẻ trung,Quần
-                            lửng nam chuẩn form
-                          </div>
-                        </div>
-                        <div className='ml-2 flex-shrink-0'>
-                          <span className='text-primaryColor'>₫200.000</span>
-                        </div>
-                      </div>
-                      <div className='mt-4 hover:bg-slate-100 py-2 flex'>
-                        <div className='flex-shrink-0 '>
-                          <img
-                            src='https://mighty.tools/mockmind-api/content/cartoon/31.jpg'
-                            alt='product'
-                            className='w-10 h-10 object-cover'
-                          />
-                        </div>
-                        <div className='flex-grow ml-2 overflow-hidden'>
-                          <div className='truncate'>
-                            Quần Short Nam HAFOS BASIC nỉ chân cua cao cấp, quần thun nam, Quần đùi nam trẻ trung,Quần
-                            lửng nam chuẩn form
-                          </div>
-                        </div>
-                        <div className='ml-2 flex-shrink-0'>
-                          <span className='text-primaryColor'>₫200.000</span>
-                        </div>
-                      </div>
-                      <div className='mt-2 hover:bg-slate-100 py-2 flex'>
-                        <div className='flex-shrink-0 '>
-                          <img
-                            src='https://mighty.tools/mockmind-api/content/cartoon/31.jpg'
-                            alt='product'
-                            className='w-10 h-10 object-cover'
-                          />
-                        </div>
-                        <div className='flex-grow ml-2 overflow-hidden'>
-                          <div className='truncate'>
-                            Quần Short Nam HAFOS BASIC nỉ chân cua cao cấp, quần thun nam, Quần đùi nam trẻ trung,Quần
-                            lửng nam chuẩn form
-                          </div>
-                        </div>
-                        <div className='ml-2 flex-shrink-0'>
-                          <span className='text-primaryColor'>₫200.000</span>
-                        </div>
+                      <div className='flex mt-6 items-center justify-between'>
+                        <span className='text-xs capitalize text-gray-500'>
+                          {purchasesInCart.length > MAX_PURCHASES
+                            ? purchasesInCart.length - MAX_PURCHASES + ' thêm hàng vào giỏ'
+                            : 'thêm hàng vào giỏ'}
+                        </span>
+                        <Link
+                          to='/'
+                          className='block px-4 py-2 capitalize text-white bg-primaryColor rounded-sm hover:opacity-90'
+                        >
+                          Xem giỏ hàng
+                        </Link>
                       </div>
                     </div>
-                    <div className='flex mt-6 items-center justify-between'>
-                      <span className='text-xs capitalize text-gray-500'>1 thêm hàng vào giỏ</span>
-                      <Link
-                        to='/'
-                        className='block px-4 py-2 capitalize text-white bg-primaryColor rounded-sm hover:opacity-90'
-                      >
-                        Xem giỏ hàng
-                      </Link>
+                  ) : (
+                    <div className='p-2 w-[300px] h-[300px] flex items-center justify-center flex-col gap-6'>
+                      <img src={noProduct} alt='no_product' className='w-32 h-32' />
+                      <span className='text-sm text-gray-500 capitalize'>Chưa có sản phẩm</span>
                     </div>
-                  </div>
+                  )}
                 </div>
               }
             >
@@ -274,7 +259,7 @@ export default function Header() {
                     />
                   </svg>
                   <div className='absolute flex justify-center items-center px-3 w-4 h-4 rounded-lg -top-1 -right-2 bg-white border-1 border-primaryColor text-primaryColor'>
-                    9
+                    {purchasesInCart?.length}
                   </div>
                 </Link>
               </div>

@@ -1,4 +1,12 @@
-export default function ProductRating({ rating }: { rating: number }) {
+export default function ProductRating({
+  rating,
+  activeClassname = 'size-4 fill-yellow-300 text-yellow-300',
+  nonActiveClassName = 'size-4 fill-gray-300 text-gray-300'
+}: {
+  rating: number
+  activeClassname?: string
+  nonActiveClassName?: string
+}) {
   const handleWidth = (order: number) => {
     if (order <= rating) {
       return '100%'
@@ -23,7 +31,7 @@ export default function ProductRating({ rating }: { rating: number }) {
                 viewBox='0 0 24 24'
                 strokeWidth={1.5}
                 stroke='fill-yellow-400'
-                className='size-4 fill-yellow-300 text-yellow-300 z-10'
+                className={activeClassname}
               >
                 <path
                   strokeLinecap='round'
@@ -38,7 +46,7 @@ export default function ProductRating({ rating }: { rating: number }) {
               viewBox='0 0 24 24'
               strokeWidth={1.5}
               stroke='fill-gray-300'
-              className='size-4 fill-gray-300 text-gray-300'
+              className={nonActiveClassName}
             >
               <path
                 strokeLinecap='round'

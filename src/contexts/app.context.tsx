@@ -1,6 +1,6 @@
 import { createContext, useState } from 'react'
-import { getAccessTokenFromLS, getProfileFromLS } from '../utils/auth'
-import { User } from '../types/user.type'
+import { User } from 'src/types/user.type'
+import { getAccessTokenFromLS, getProfileFromLS } from 'src/utils/auth'
 
 interface AppContextInterface {
   profile: User | null
@@ -16,6 +16,7 @@ const initialAppContext: AppContextInterface = {
   setProfile: () => null
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const AppContext = createContext<AppContextInterface>(initialAppContext)
 
 export const AppProvider = ({ children }: { children: React.ReactNode }) => {

@@ -1,6 +1,6 @@
 import { createSearchParams, useNavigate } from 'react-router-dom'
-import { queryConfig } from '../../ProductList'
-import path from '../../../../constants/path'
+import path from 'src/constants/path'
+import { queryConfig } from 'src/hooks/useQueryConfig'
 
 interface Props {
   queryConfig: queryConfig
@@ -36,7 +36,7 @@ export default function RatingStars({ queryConfig }: Props) {
                 .fill(0)
                 .map((_, indexStar) =>
                   indexStar < 5 - index ? (
-                    <svg viewBox='0 0 9.5 8' className='size-4 mr-1'>
+                    <svg viewBox='0 0 9.5 8' className='size-4 mr-1' key={indexStar}>
                       <defs>
                         <linearGradient id='ratingStarGradient' x1='50%' x2='50%' y1='0%' y2='100%'>
                           <stop offset={0} stopColor='#ffca11' />
@@ -62,7 +62,7 @@ export default function RatingStars({ queryConfig }: Props) {
                       </g>
                     </svg>
                   ) : (
-                    <svg viewBox='0 0 30 30' className='size-4 mr-1'>
+                    <svg viewBox='0 0 30 30' className='size-4 mr-1' key={indexStar}>
                       <defs>
                         <linearGradient id='star__hollow' x1='50%' x2='50%' y1='0%' y2='99.0177926%'>
                           <stop offset='0%' stopColor='#FFD211' />

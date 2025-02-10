@@ -1,17 +1,17 @@
 import { createSearchParams, Link, useNavigate } from 'react-router-dom'
-import path from '../../../../constants/path'
-import Button from '../../../../components/Button'
-import { queryConfig } from '../../ProductList'
-import { Category } from '../../../../types/category.type'
 import classNames from 'classnames'
-import InputNumber from '../../../../components/InputNumber'
 import { useForm, Controller } from 'react-hook-form'
-import { schema, Schema } from '../../../../utils/rules'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { omit } from 'lodash'
 import { ObjectSchema } from 'yup'
-import { NoUndefinedField } from '../../../../types/utils.type'
+import { Category } from 'src/types/category.type'
+import { NoUndefinedField } from 'src/types/utils.type'
+import { schema, Schema } from 'src/utils/rules'
+import path from 'src/constants/path'
+import InputNumber from 'src/components/InputNumber'
+import Button from 'src/components/Button'
 import RatingStars from '../RatingStars'
+import { queryConfig } from 'src/hooks/useQueryConfig'
 
 interface Props {
   queryConfig: queryConfig
@@ -49,7 +49,6 @@ export default function AsideFilter({ queryConfig, categories }: Props) {
       }).toString()
     })
   })
-  console.log(errors)
 
   const handleRemoveAll = () => {
     navigate({
