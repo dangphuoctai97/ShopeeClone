@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import productApi from 'src/apis/product.api'
 import ProductRating from 'src/components/ProductRating'
 import { discountPercent, formatCurency, formatNumberToSocialStyle, getIdFromNameId } from 'src/utils/utils'
@@ -12,10 +12,12 @@ import purchasesApi from 'src/apis/purchases.api'
 import { queryClient } from 'src/main'
 import { purchasesStatus } from 'src/constants/purchase'
 import { toast } from 'react-toastify'
+import path from 'src/constants/path'
 
 export default function ProductDetail() {
   const [buyCount, setBuyCount] = useState(1)
   const { nameId } = useParams()
+  const navigate = useNavigate()
   const id = getIdFromNameId(nameId as string)
   const { data } = useQuery({
     queryKey: ['product', id],
@@ -101,6 +103,25 @@ export default function ProductDetail() {
           queryClient.invalidateQueries({ queryKey: ['purchases', { status: purchasesStatus.inCart }] })
           toast.success(data.data.message, {
             autoClose: 1000
+          })
+        }
+      }
+    )
+  }
+
+  const buyNow = () => {
+    addToCartMutation.mutate(
+      {
+        product_id: productDetailData?._id as string,
+        buy_count: buyCount
+      },
+      {
+        onSuccess: (data) => {
+          const purchase = data.data.data
+          navigate(path.cart, {
+            state: {
+              purchaseId: purchase._id
+            }
           })
         }
       }
@@ -217,7 +238,10 @@ export default function ProductDetail() {
                   </svg>
                   Thêm vào giỏ hàng
                 </button>
-                <button className='flex items-center justify-center h-12 px-14 min-w-[6rem] capitalize rounded-sm outline-none  bg-primaryColor text-white shadow-sm hover:bg-primaryColor/90'>
+                <button
+                  onClick={buyNow}
+                  className='flex items-center justify-center h-12 px-14 min-w-[6rem] capitalize rounded-sm outline-none  bg-primaryColor text-white shadow-sm hover:bg-primaryColor/90'
+                >
                   Mua ngay
                 </button>
               </div>

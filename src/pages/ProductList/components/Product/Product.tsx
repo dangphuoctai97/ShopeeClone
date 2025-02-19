@@ -18,13 +18,6 @@ export default function Product({ product }: Props) {
             alt={product.name}
             className='top-0 left-0 w-full h-full pointer-events-none object-cover absolute'
           />
-          <div className='absolute bottom-0 left-0 z-[1] w-full h-full'>
-            <img
-              src='https://down-vn.img.susercontent.com/file/vn-11134258-7ras8-m466c75w5ybr2d'
-              alt=''
-              className='w-full'
-            />
-          </div>
         </div>
         <div className='p-2 overflow-hidden '>
           <div className='min-h-[2rem] line-clamp-2 text-xs'>{product.name}</div>
