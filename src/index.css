@@ -14,3 +14,19 @@ html {
 body {
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
+
+input[type='password']::-ms-reveal {
+  display: none;
+}
+input[type='password']::-ms-clear {
+  display: none;
+}
+input[type='password']::-webkit-reveal {
+  display: none;
+}
+input[type='password']::-webkit-clear {
+  display: none;
+}
+input[type='password']::-moz-clear {
+  display: none;
+}

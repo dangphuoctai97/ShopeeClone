@@ -1,3 +1,3 @@
-import Cartlayout from './Cartlayout'
+import CartLayout from './CartLayout'
 
-export default Cartlayout
+export default CartLayout

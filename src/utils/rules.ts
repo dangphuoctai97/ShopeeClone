@@ -8,6 +8,15 @@ function testPriceMinMax(this: yup.TestContext<yup.AnyObject>) {
   return price_min !== '' || price_max !== ''
 }
 
+const handleConFirmPasswordYup = (refString: string, message: string) => {
+  return yup
+    .string()
+    .required('Bạn chưa nhập mật khẩu')
+    .min(6, 'Mật khẩu phải có từ 6-160 kí tự')
+    .max(160, 'Mật khẩu phải có từ 6-160 kí tự')
+    .oneOf([yup.ref(refString)], message)
+}
+
 export const schema = yup.object({
   email: yup
     .string()
@@ -20,12 +29,7 @@ export const schema = yup.object({
     .required('Bạn chưa nhập mật khẩu')
     .min(6, 'Mật khẩu phải có từ 6-160 kí tự')
     .max(160, 'Mật khẩu phải có từ 6-160 kí tự'),
-  confirm_password: yup
-    .string()
-    .required('Bạn chưa nhập mật khẩu')
-    .min(6, 'Mật khẩu phải có từ 6-160 kí tự')
-    .max(160, 'Mật khẩu phải có từ 6-160 kí tự')
-    .oneOf([yup.ref('password')], 'Xác nhận mật khẩu không chính xác'),
+  confirm_password: handleConFirmPasswordYup('password', 'Nhập lại mật khẩu không chính xác'),
   price_min: yup.string().test({
     name: 'price-not-allowed',
     message: 'Giá không phù hợp',
@@ -39,4 +43,19 @@ export const schema = yup.object({
   name: yup.string().trim().required()
 })
 
+export const userSchema = yup.object({
+  name: yup.string().max(160, 'Độ dài tối đa 160 kí tự'),
+  phone: yup.string().max(20, 'Độ dài tối đa 20 kí tự'),
+  address: yup.string().max(160, 'Độ dài tối đa 160 kí tự'),
+  date_of_birth: yup.date().max(new Date(), 'Ngày sinh không phù hợp'),
+  avatar: yup.string().max(1000, 'Độ dài tối đa 1000 kí tự'),
+  password: schema.fields['password'] as yup.StringSchema<string | undefined, yup.AnyObject, undefined, ''>,
+  new_password: schema.fields['password'] as yup.StringSchema<string | undefined, yup.AnyObject, undefined, ''>,
+  confirm_password: handleConFirmPasswordYup(
+    'new_password',
+    'Nhập lại mật khẩu mới không chính xác'
+  ) as yup.StringSchema<string | undefined, yup.AnyObject, undefined, ''>
+})
+
 export type Schema = yup.InferType<typeof schema>
+export type UserSchema = yup.InferType<typeof userSchema>

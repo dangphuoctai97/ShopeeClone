@@ -3,12 +3,13 @@ import Popover from '../Popover'
 import { AppContext } from 'src/contexts/app.context'
 import { Link } from 'react-router-dom'
 import path from 'src/constants/path'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import authApi from 'src/apis/auth.api'
-import { queryClient } from 'src/main'
 import { purchasesStatus } from 'src/constants/purchase'
+import { getAvatarUrl } from 'src/utils/utils'
 
 export default function NavHeader() {
+  const queryClient = useQueryClient()
   const { isAuthenticated, setIsAuthenticated, profile } = useContext(AppContext)
 
   const logoutMutation = useMutation({
@@ -93,12 +94,8 @@ export default function NavHeader() {
             </div>
           }
         >
-          <div className='w-6 h6 mr-2 flex-shrink-0'>
-            <img
-              src='https://mighty.tools/mockmind-api/content/cartoon/31.jpg'
-              alt='avatar'
-              className='w-full h-full object-cover rounded-full'
-            />
+          <div className='w-6 h-6 mr-2 flex-shrink-0'>
+            <img src={getAvatarUrl(profile?.avatar)} alt='avatar' className='w-full h-full object-cover rounded-full' />
           </div>
           <span>{profile?.email}</span>
         </Popover>
